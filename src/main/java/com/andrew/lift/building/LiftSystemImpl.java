@@ -14,7 +14,6 @@ import java.util.Map;
 public class LiftSystemImpl implements LiftSystem {
 
     private int liftCapacity = 5;
-    //private int currentLiftCapacity = 0;
 
     @Override
     public void startMove(int numberOfFloors, Map<Integer, PassengerDestination> takenPassengers) {
@@ -43,7 +42,7 @@ public class LiftSystemImpl implements LiftSystem {
             int passengersOut = checkIfPassengersOut(currentFloor, takenPassengers);
             System.out.println("passengers out - " + passengersOut);
             if (passengersOut > 0) {
-                passengersOut(currentFloor, passengersOut, takenPassengers);
+                passengersOut(currentFloor, takenPassengers);
             }
             System.out.println("Passengers in lift - " + takenPassengers.size());
             System.out.println("---------");
@@ -67,7 +66,7 @@ public class LiftSystemImpl implements LiftSystem {
             int passengersOut = checkIfPassengersOut(currentFloor, takenPassengers);
             System.out.println("passengers out - " + passengersOut);
             if (passengersOut > 0) {
-                passengersOut(currentFloor, passengersOut, takenPassengers);
+                passengersOut(currentFloor, takenPassengers);
             }
             System.out.println("Passengers in lift - " + takenPassengers.size());
             System.out.println("---------");
@@ -77,20 +76,19 @@ public class LiftSystemImpl implements LiftSystem {
     private Map<Integer, PassengerDestination> takePassengersLiftUp(int currentFloor, Map<Integer, PassengerDestination> eachPassengerDestination, int passengersIn, Map<Integer, PassengerDestination> takenPassengers) {
         for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
             PassengerDestination passengerDestination = entry.getValue();
-            /*if (passengerDestination.getFloorDestination() > currentFloor && passengerDestination.getDirection() == UpAndDown.UP) {*/
+            if (takenPassengers.size() < 5 && passengerDestination.getFloorDestination() > currentFloor && passengerDestination.getDirection() == UpAndDown.UP) {
                 takenPassengers.put(takenPassengers.size() + 1, passengerDestination);
-                //currentLiftCapacity++;
             }
+        }
         return takenPassengers;
     }
 
     private Map<Integer, PassengerDestination> takePassengersLiftDown(int currentFloor, Map<Integer, PassengerDestination> eachPassengerDestination, int passengersIn, Map<Integer, PassengerDestination> takenPassengers) {
-
         for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
             PassengerDestination passengerDestination = entry.getValue();
-            /*if (passengerDestination.getFloorDestination() <= currentFloor && passengerDestination.getDirection() == UpAndDown.DOWN) */
+            if (takenPassengers.size() < 5 && passengerDestination.getFloorDestination() < currentFloor && passengerDestination.getDirection() == UpAndDown.DOWN) {
                 takenPassengers.put(takenPassengers.size() + 1, passengerDestination);
-                //currentLiftCapacity++;
+            }
 
         }
         return takenPassengers;
@@ -101,11 +99,10 @@ public class LiftSystemImpl implements LiftSystem {
         if (takenPassengers.size() < liftCapacity) {
             for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
                 PassengerDestination passengerDestination = entry.getValue();
-                /*if (currentFloor != RandomGenerator.numberOfFloors && passengerDestination.getDirection() == UpAndDown.UP && passengerDestination.getFloorDestination() != currentFloor) {
-                    passengersIn++;
-                }*/
                 if(passengerDestination.getFloorDestination() > currentFloor && passengerDestination.getDirection() == UpAndDown.UP){
-                    passengersIn++;
+                    if(takenPassengers.size() + 1 <= liftCapacity){
+                        passengersIn++;
+                    }
                 }
             }
         }
@@ -117,20 +114,18 @@ public class LiftSystemImpl implements LiftSystem {
         if (takenPassengers.size() < liftCapacity) {
             for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
                 PassengerDestination passengerDestination = entry.getValue();
-                /*if (currentFloor != 1 && passengerDestination.getDirection() == UpAndDown.DOWN && passengerDestination.getFloorDestination() != currentFloor) {
-                    passengersIn++;
-                }*/
                 if(passengerDestination.getFloorDestination() < currentFloor && passengerDestination.getDirection() == UpAndDown.DOWN){
-                    passengersIn++;
+                    if(takenPassengers.size() + 1 <= liftCapacity){
+                        passengersIn++;
+                    }
                 }
             }
         }
         return passengersIn;
     }
 
-    private void passengersOut(int currentFloor, int passengersOut, Map<Integer, PassengerDestination> takenPassengers) {
+    private void passengersOut(int currentFloor, Map<Integer, PassengerDestination> takenPassengers) {
         takenPassengers.entrySet().removeIf(entry -> entry.getValue().getFloorDestination() == currentFloor);
-        //currentLiftCapacity -= passengersOut;
     }
 
     private int checkIfPassengersOut(int currentFloor, Map<Integer, PassengerDestination> takenPassengers) {
