@@ -4,6 +4,8 @@ import com.andrew.lift.passenger.PassengerDestination;
 import com.andrew.lift.passenger.UpAndDown;
 import com.andrew.lift.random.RandomGenerator;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 
@@ -13,13 +15,13 @@ import java.util.Map;
 
 public class LiftSystemImpl implements LiftSystem {
 
-    private int liftCapacity = 5;
+    private static final int LIFT_CAPACITY = 5;
 
     @Override
     public void startMove(int numberOfFloors, Map<Integer, PassengerDestination> takenPassengers) {
 
         System.out.println("Number of floors - " + numberOfFloors);
-        System.out.println("Lift capacity - " + liftCapacity);
+        System.out.println("Lift capacity - " + LIFT_CAPACITY);
 
         goUp(numberOfFloors, takenPassengers);
         goDown(numberOfFloors, takenPassengers);
@@ -32,17 +34,14 @@ public class LiftSystemImpl implements LiftSystem {
             Floor floor = new Floor(new RandomGenerator());
             System.out.println("Floor number - " + currentFloor);
             Map<Integer, PassengerDestination> eachPassengerDestination = floor.forEachPassengerGenerateDestination(floor.getNumberOfPassengers());
-
-            int passengersIn = checkIfPassengersInLiftUp(currentFloor, eachPassengerDestination, takenPassengers);
+            int passengersIn = takePassengersLiftUp(currentFloor, eachPassengerDestination, takenPassengers);
             System.out.println("Passengers in - " + passengersIn);
-            if (passengersIn > 0) {
-                takenPassengers = takePassengersLiftUp(currentFloor, eachPassengerDestination, passengersIn, takenPassengers);
-            }
 
             int passengersOut = checkIfPassengersOut(currentFloor, takenPassengers);
             System.out.println("passengers out - " + passengersOut);
             if (passengersOut > 0) {
                 passengersOut(currentFloor, takenPassengers);
+                takenPassengers = putInOrderTakenPassengers(takenPassengers);
             }
             System.out.println("Passengers in lift - " + takenPassengers.size());
             System.out.println("---------");
@@ -58,68 +57,53 @@ public class LiftSystemImpl implements LiftSystem {
             System.out.println("Floor number - " + currentFloor);
 
             Map<Integer, PassengerDestination> eachPassengerDestination = floor.forEachPassengerGenerateDestination(floor.getNumberOfPassengers());
-            int passengersIn = checkIfPassengersInLiftDown(currentFloor, eachPassengerDestination, takenPassengers);
+            int passengersIn = takePassengersLiftDown(currentFloor, eachPassengerDestination, takenPassengers);
             System.out.println("Passengers in - " + passengersIn);
-            if (passengersIn > 0) {
-                takenPassengers = takePassengersLiftDown(currentFloor, eachPassengerDestination, passengersIn, takenPassengers);
-            }
             int passengersOut = checkIfPassengersOut(currentFloor, takenPassengers);
             System.out.println("passengers out - " + passengersOut);
             if (passengersOut > 0) {
                 passengersOut(currentFloor, takenPassengers);
+                takenPassengers = putInOrderTakenPassengers(takenPassengers);
             }
             System.out.println("Passengers in lift - " + takenPassengers.size());
             System.out.println("---------");
         }
     }
 
-    private Map<Integer, PassengerDestination> takePassengersLiftUp(int currentFloor, Map<Integer, PassengerDestination> eachPassengerDestination, int passengersIn, Map<Integer, PassengerDestination> takenPassengers) {
-        for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
+    private Map<Integer, PassengerDestination> putInOrderTakenPassengers(Map<Integer, PassengerDestination> takenPassengers) {
+        int i = 1;
+        Map<Integer, PassengerDestination> orderedTakenPassengers = new HashMap<>();
+        Iterator<Map.Entry<Integer, PassengerDestination>> iterator = takenPassengers.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Integer, PassengerDestination> entry = iterator.next();
             PassengerDestination passengerDestination = entry.getValue();
-            if (takenPassengers.size() < 5 && passengerDestination.getFloorDestination() > currentFloor && passengerDestination.getDirection() == UpAndDown.UP) {
-                takenPassengers.put(takenPassengers.size() + 1, passengerDestination);
-            }
+            iterator.remove();
+            orderedTakenPassengers.put(new Integer(i++), passengerDestination);
         }
-        return takenPassengers;
+        return orderedTakenPassengers;
     }
 
-    private Map<Integer, PassengerDestination> takePassengersLiftDown(int currentFloor, Map<Integer, PassengerDestination> eachPassengerDestination, int passengersIn, Map<Integer, PassengerDestination> takenPassengers) {
-        for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
-            PassengerDestination passengerDestination = entry.getValue();
-            if (takenPassengers.size() < 5 && passengerDestination.getFloorDestination() < currentFloor && passengerDestination.getDirection() == UpAndDown.DOWN) {
-                takenPassengers.put(takenPassengers.size() + 1, passengerDestination);
-            }
-
-        }
-        return takenPassengers;
-    }
-
-    private int checkIfPassengersInLiftUp(int currentFloor, Map<Integer, PassengerDestination> eachPassengerDestination, Map<Integer, PassengerDestination> takenPassengers) {
+    private int takePassengersLiftUp(int currentFloor, Map<Integer, PassengerDestination> eachPassengerDestination, Map<Integer, PassengerDestination> takenPassengers) {
         int passengersIn = 0;
-        if (takenPassengers.size() < liftCapacity) {
-            for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
-                PassengerDestination passengerDestination = entry.getValue();
-                if(passengerDestination.getFloorDestination() > currentFloor && passengerDestination.getDirection() == UpAndDown.UP){
-                    if(takenPassengers.size() + 1 <= liftCapacity){
-                        passengersIn++;
-                    }
-                }
+        for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
+            PassengerDestination passengerDestination = entry.getValue();
+            if (takenPassengers.size() < LIFT_CAPACITY && passengerDestination.getFloorDestination() > currentFloor && passengerDestination.getDirection() == UpAndDown.UP) {
+                takenPassengers.put(takenPassengers.size() + 1, passengerDestination);
+                passengersIn++;
             }
         }
         return passengersIn;
     }
 
-    private int checkIfPassengersInLiftDown(int currentFloor, Map<Integer, PassengerDestination> eachPassengerDestination, Map<Integer, PassengerDestination> takenPassengers) {
+    private int takePassengersLiftDown(int currentFloor, Map<Integer, PassengerDestination> eachPassengerDestination, Map<Integer, PassengerDestination> takenPassengers) {
         int passengersIn = 0;
-        if (takenPassengers.size() < liftCapacity) {
-            for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
-                PassengerDestination passengerDestination = entry.getValue();
-                if(passengerDestination.getFloorDestination() < currentFloor && passengerDestination.getDirection() == UpAndDown.DOWN){
-                    if(takenPassengers.size() + 1 <= liftCapacity){
-                        passengersIn++;
-                    }
-                }
+        for (Map.Entry<Integer, PassengerDestination> entry : eachPassengerDestination.entrySet()) {
+            PassengerDestination passengerDestination = entry.getValue();
+            if (takenPassengers.size() < LIFT_CAPACITY && passengerDestination.getFloorDestination() < currentFloor && passengerDestination.getDirection() == UpAndDown.DOWN) {
+                takenPassengers.put(takenPassengers.size() + 1, passengerDestination);
+                passengersIn++;
             }
+
         }
         return passengersIn;
     }
